@@ -1,50 +1,57 @@
-# Welcome to your Expo app 👋
+# 📌 Backlog do App Acadêmico
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+## 🚀 Sprint 1 – Estrutura inicial e funcionalidades básicas ✅ *(concluído)*
+- **Onboarding / Perfil**
+  - Criar perfil simples (nome, curso, instituição, semestre atual).
+- **Disciplinas**
+  - Cadastro de disciplinas (nome, professor, código da turma).
+- **Notas rápidas**
+  - Criar e listar anotações simples (com título e texto).
+- **Navegação inicial**
+  - Tabs configuradas com Ionicons.
+  - Dashboard (painel inicial) mostrando resumo:
+    - Disciplinas cadastradas.
+    - Número de anotações.
+    - Próximas tarefas.
+    - Próximo horário de aula.
 
-## Get started
+---
 
-1. Install dependencies
+## 🔜 Sprint 2 – Organização acadêmica avançada
+- **Horários semanais**
+  - Cadastrar aulas (dia da semana, início/fim, local/link).
+  - Exibir lista semanal ordenada por dia/hora.
+  - Exibir “próxima aula” no Dashboard.
+- **Tarefas / Avaliações**
+  - Cadastrar provas, trabalhos e projetos:
+    - Tipo de avaliação.
+    - Disciplina relacionada.
+    - Data/hora da entrega/prova.
+    - Observações.
+  - Exibir próximas tarefas no Dashboard.
+- **Anotações**
+  - Abrir nota em tela de detalhe.
+  - Visualizar anexo vinculado.
+- **UX**
+  - Navegação melhorada (Link para detalhes).
+  - Layout de detalhe de nota com botão de voltar.
 
-   ```bash
-   npm install
-   ```
+---
 
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
-```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## 🔮 Sprint 3 – Recursos extras e integração
+- **Notas**
+  - Editar e excluir anotações.
+  - Melhorar gestão de anexos (upload múltiplo, visualizar no app).
+- **Performance acadêmica**
+  - Cadastro de notas das disciplinas.
+  - Cálculo automático de média parcial/final com pesos.
+  - Exibição de gráficos de evolução de notas.
+- **Notificações e lembretes**
+  - Alertas para provas, trabalhos e início de aulas.
+  - Configuração de lembretes (ex: X dias antes).
+- **Calendário integrado**
+  - Visualização mensal/semanal de aulas, provas e trabalhos.
+  - Integração opcional com Google Calendar.
+- **Exportação e personalização**
+  - Exportar dados em PDF/Excel.
+  - Interface personalizável (temas claros/escuros, cores para disciplinas).

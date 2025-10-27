@@ -123,7 +123,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 	}, [notes]);
 
 	const addSchedule = React.useCallback(async (s: Omit<ClassSchedule, 'id'>) => {
-		const item: ClassSchedule = { ...s, id: uuid.v4() };
+		const item: ClassSchedule = { ...s, id: uuid.v4() as string };
 		const next = [...schedule, item];
 		await save(SCHEDULE_KEY, next);
 		setSchedule(next);
@@ -135,7 +135,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 		setSchedule(next);
 	}, [schedule]);
 
-	const updateSchedule = React.useCallback(async (id: string, patch: Partial<Note>) => {
+	const updateSchedule = React.useCallback(async (id: string, patch: Partial<ClassSchedule>) => {
 		const next = schedule.map(x => x.id === id ? { ...x, ...patch, updatedAt: Date.now() } : x);
 		await save(SCHEDULE_KEY, next);
 		setSchedule(next);

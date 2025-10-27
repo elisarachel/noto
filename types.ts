@@ -13,6 +13,8 @@ export type Discipline = {
 	professor?: string;
 	code?: string;
 	createdAt: number;
+	grading?: GradingScheme;
+
 };
 
 export type NoteAttachment = {
@@ -43,11 +45,35 @@ export type ClassSchedule = {
 export type TaskType = 'prova' | 'trabalho' | 'projeto';
 
 export type Task = {
-	id: string;
-	disciplineId: string;
-	type: TaskType;
-	title: string;       // Ex: "Prova 1", "Projeto final"
-	dueDate: string;     // formato "2025-10-10T09:00"
-	notes?: string;      // observações extras
-	createdAt: number;
+    id: string;
+    disciplineId: string;
+    type: 'prova' | 'trabalho' | 'projeto';
+    title: string;
+    dueDate: string; // ISO
+    notes?: string;
+    createdAt: number;
+
+    grade?: number;
+    gradeMax?: number;
+
+    componentId?: string;
+};
+
+export type AssessmentComponent = {
+  id: string;
+  label: string;   // Ex.: "Provas", "Trabalhos", "Projeto final"
+  weight: number;  // % (0–100)
+};
+
+export type GradingScheme = {
+  components: AssessmentComponent[];
+  approvalThreshold?: number; // Ex.: 6.0 (média para aprovação)
+  scaleMax?: number;          // Ex.: 10 (nota máxima)
+};
+
+export type Grade = {
+  id: string;
+  disciplineId: string;
+  componentId: string; // aponta p/ AssessmentComponent.id
+  value: number;       // 0..scaleMax
 };

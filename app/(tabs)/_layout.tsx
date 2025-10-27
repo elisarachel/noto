@@ -49,6 +49,13 @@ export default function TabsLayout() {
           ),
         }}
       />
+	  <Tabs.Screen
+			name="medias"
+			options={{
+				title: 'Médias',
+				tabBarIcon: ({ color, size }) => <Ionicons name="stats-chart-outline" color={color} size={size} />
+			}}
+		/>
       <Tabs.Screen
         name="profile"
         options={{
@@ -58,6 +65,7 @@ export default function TabsLayout() {
           ),
         }}
       />
+		
     </Tabs>
   );
 }

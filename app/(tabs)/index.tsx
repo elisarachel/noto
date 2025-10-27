@@ -1,8 +1,19 @@
 import React, { useMemo } from 'react';
-import { View, Text, Pressable } from 'react-native';
+import { View, Text, Pressable, ScrollView } from 'react-native';
 import { useApp } from '@/context/AppContext';
 import { Link } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import CalendarCard from '@/components/CalendarCard';
+import { LocaleConfig } from 'react-native-calendars';
+
+LocaleConfig.locales['pt-br'] = {
+  monthNames: ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'],
+  monthNamesShort: ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'],
+  dayNames: ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'],
+  dayNamesShort: ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'],
+  today: 'Hoje'
+};
+LocaleConfig.defaultLocale = 'pt-br';
 
 export default function Dashboard() {
 	const { profile, disciplines, notes, tasks, schedule } = useApp();
@@ -46,7 +57,7 @@ export default function Dashboard() {
 	}
 
 	return (
-		<View style={{ flex:1, padding:16, gap:16 }}>
+		<ScrollView style={{ flex:1 }} contentContainerStyle={{ padding:16, gap:16 }}>
 			<Text style={{ fontSize:24, fontWeight:'700', marginBottom:4 }}>
 				{greeting}, {profile?.name?.split(' ')[0]}!
 			</Text>
@@ -105,28 +116,10 @@ export default function Dashboard() {
 				)}
 			</Card>
 
-			{/* Navegação rápida */}
-			<View style={{ flexDirection:'row', gap:10, marginTop:8 }}>
-				<Link asChild href="/profile">
-					<Pressable style={btnSecondary}>
-						<Ionicons name="person-circle-outline" size={20} color="#374151" />
-						<Text style={{ marginLeft:6 }}>Perfil</Text>
-					</Pressable>
-				</Link>
-				<Link asChild href="/(tabs)/disciplinas">
-					<Pressable style={btn}>
-						<Ionicons name="book-outline" size={20} color="#fff" />
-						<Text style={[btnText, { marginLeft:6 }]}>Disciplinas</Text>
-					</Pressable>
-				</Link>
-				<Link asChild href="/(tabs)/notas">
-					<Pressable style={btn}>
-						<Ionicons name="pencil-outline" size={20} color="#fff" />
-						<Text style={[btnText, { marginLeft:6 }]}>Anotações</Text>
-					</Pressable>
-				</Link>
-			</View>
-		</View>
+			<Card title="Calendário" icon="calendar-outline">
+				<CalendarCard tasks={tasks} />
+			</Card>
+		</ScrollView>
 	);
 }
 

@@ -10,71 +10,77 @@ export default function DisciplinesScreen() {
 	const [creating, setCreating] = useState(false);
 
 	return (
-		<View style={{ flex:1, padding:16, gap:16 }}>
-			<View style={{ flexDirection:'row', justifyContent:'space-between', alignItems:'center' }}>
-				<Text style={{ fontSize:22, fontWeight:'700' }}>Disciplinas</Text>
-				<Pressable onPress={() => { setCreating(true); setEditing(null); }} style={btn}>
-					<Text style={{ color:'#fff', fontWeight:'600' }}>Nova</Text>
-				</Pressable>
-			</View>
-
-			{creating && (
-				<View style={card}>
-					<Text style={title}>Adicionar disciplina</Text>
-					<DisciplineForm
-						onSubmit={async (data) => {
-							if (!data.name) { Alert.alert('Informe o nome'); return; }
-							await addDiscipline(data);
-							setCreating(false);
-						}}
-						onCancel={() => setCreating(false)}
-					/>
-				</View>
-			)}
-
-			{editing && (
-				<View style={card}>
-					<Text style={title}>Editar disciplina</Text>
-					<DisciplineForm
-						initial={editing}
-						onSubmit={async (data) => {
-							await updateDiscipline(editing.id, data);
-							setEditing(null);
-						}}
-						onCancel={() => setEditing(null)}
-					/>
-				</View>
-			)}
-
-			<FlatList
-				data={disciplines}
-				keyExtractor={(item) => item.id}
-				contentContainerStyle={{ gap:10, paddingBottom:20 }}
-				renderItem={({ item }) => (
-					<View style={row}>
-						<View style={{ flex:1 }}>
-							<Text style={{ fontSize:16, fontWeight:'600' }}>{item.name}</Text>
-							{!!item.professor && <Text style={{ color:'#555' }}>Prof.: {item.professor}</Text>}
-							{!!item.code && <Text style={{ color:'#777' }}>Código: {item.code}</Text>}
-						</View>
-						<View style={{ flexDirection:'row', gap:8 }}>
-							<Pressable onPress={() => setEditing(item)} style={chip}><Text>Editar</Text></Pressable>
-							<Pressable
-								onPress={() => {
-									Alert.alert('Excluir', `Excluir "${item.name}"?`, [
-										{ text: 'Cancelar' },
-										{ text: 'Excluir', style: 'destructive', onPress: () => removeDiscipline(item.id) }
-									]);
-								}}
-								style={chipDanger}
-							>
-								<Text style={{ color:'#fff' }}>Excluir</Text>
-							</Pressable>
-						</View>
+		<FlatList
+			data={disciplines}
+			keyExtractor={(item) => item.id}
+			contentContainerStyle={{ padding:16, gap:16, paddingBottom:20 }}
+			ListHeaderComponent={() => (
+				<View style={{ gap:16 }}>
+					<View style={{ flexDirection:'row', justifyContent:'space-between', alignItems:'center' }}>
+						<Text style={{ fontSize:22, fontWeight:'700' }}>Disciplinas</Text>
+						<Pressable onPress={() => { setCreating(true); setEditing(null); }} style={btn}>
+							<Text style={{ color:'#fff', fontWeight:'600' }}>Nova</Text>
+						</Pressable>
 					</View>
-				)}
-			/>
-		</View>
+
+					{creating && (
+						<View style={card}>
+							<Text style={title}>Adicionar disciplina</Text>
+							<DisciplineForm
+								onSubmit={async (data) => {
+									if (!data.name) { Alert.alert('Informe o nome'); return; }
+									await addDiscipline(data);
+									setCreating(false);
+								}}
+								onCancel={() => setCreating(false)}
+							/>
+						</View>
+					)}
+
+					{editing && (
+						<View style={card}>
+							<Text style={title}>Editar disciplina</Text>
+							<DisciplineForm
+								initial={editing}
+								onSubmit={async (data) => {
+									await updateDiscipline(editing.id, data);
+									setEditing(null);
+								}}
+								onCancel={() => setEditing(null)}
+							/>
+						</View>
+					)}
+				</View>
+			)}
+			renderItem={({ item }) => (
+				<View style={row}>
+					<View style={{ flex:1 }}>
+						<Text style={{ fontSize:16, fontWeight:'600' }}>{item.name}</Text>
+						{!!item.professor && <Text style={{ color:'#555' }}>Prof.: {item.professor}</Text>}
+						{!!item.code && <Text style={{ color:'#777' }}>Código: {item.code}</Text>}
+						{!!item.grading?.components?.length && (
+							<Text style={{ color: '#4b5563', marginTop: 4 }}>
+								{item.grading.components.map(c => `${c.label} ${c.weight}%`).join('  •  ')}
+							</Text>
+						)}
+					</View>
+					<View style={{ flexDirection:'row', gap:8 }}>
+						<Pressable onPress={() => setEditing(item)} style={chip}><Text>Editar</Text></Pressable>
+						<Pressable
+							onPress={() => {
+								Alert.alert('Excluir', `Excluir "${item.name}"?`, [
+									{ text: 'Cancelar' },
+									{ text: 'Excluir', style: 'destructive', onPress: () => removeDiscipline(item.id) }
+								]);
+							}}
+							style={chipDanger}
+						>
+							<Text style={{ color:'#fff' }}>Excluir</Text>
+						</Pressable>
+					</View>
+				</View>
+			)}
+		/>
 	);
 }
 

@@ -1,10 +1,12 @@
+export type StudyPeriod = 'matutino' | 'integral' | 'noturno';
+
 export type Profile = {
-	id: string;
-	name: string;
-	course: string;
-	institution: string;
-	semester: string;
-	createdAt: number;
+	id?: string;
+	name?: string;
+	course?: string;
+	institution?: string;
+	semester?: string;
+	studyPeriod?: StudyPeriod;
 };
 
 export type Discipline = {
@@ -14,7 +16,8 @@ export type Discipline = {
 	code?: string;
 	createdAt: number;
 	grading?: GradingScheme;
-
+	maxAbsences?: number;   // ex.: 25 (aula)
+	absences?: number;      // contagem atual
 };
 
 export type NoteAttachment = {
@@ -77,3 +80,4 @@ export type Grade = {
   componentId: string; // aponta p/ AssessmentComponent.id
   value: number;       // 0..scaleMax
 };
+

@@ -23,6 +23,8 @@ import uuid from 'react-native-uuid';
 		addTask: (t: Omit<Task, 'id' | 'createdAt'>) => Promise<void>;
 		updateTask: (id: string, patch: Partial<Task>) => Promise<void>;
 		removeTask: (id: string) => Promise<void>;
+		incrementAbsence: (id: string, step?: number) => Promise<void>;
+		decrementAbsence: (id: string, step?: number) => Promise<void>;
 	};
 
 const AppContext = createContext<AppState | null>(null);
@@ -141,12 +143,28 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 		setSchedule(next);
 	}, [schedule]);
 
+	const incrementAbsence = React.useCallback(async (id: string, step: number = 1) => {
+		const d = disciplines.find(x => x.id === id);
+		if (!d) return;
+		const nextAbs = Math.max(0, (d.absences ?? 0) + step);
+		const patch: Partial<Discipline> = { absences: nextAbs };
+		await updateDiscipline(id, patch);
+	}, [disciplines, updateDiscipline]);
+
+	const decrementAbsence = React.useCallback(async (id: string, step: number = 1) => {
+		const d = disciplines.find(x => x.id === id);
+		if (!d) return;
+		const nextAbs = Math.max(0, (d.absences ?? 0) - step);
+		const patch: Partial<Discipline> = { absences: nextAbs };
+		await updateDiscipline(id, patch);
+	}, [disciplines, updateDiscipline]);
+
 	const value = useMemo<AppState>(() => ({
 		profile, disciplines, notes, schedule, tasks,
 		setProfile, addDiscipline, updateDiscipline, removeDiscipline,
 		addNote, updateNote, removeNote, refresh,
 		addSchedule, removeSchedule, updateSchedule,
-		addTask, updateTask, removeTask
+		addTask, updateTask, removeTask, incrementAbsence, decrementAbsence
 	}), [
 		profile,
 		disciplines,
@@ -166,7 +184,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 		updateSchedule,
 		addTask,
 		updateTask,
-		removeTask
+		removeTask,
+		incrementAbsence,
+		decrementAbsence
 	]);
 
 	return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

@@ -133,7 +133,7 @@ export default function TaskForm({ disciplines, initial, onSubmit, onCancel }: T
                         </Pressable>
              ))}
 
-            <Text>Data e hora*</Text>
+            <Text>Data e hora</Text>
 <Pressable
     onPress={() => setShowPicker(true)}
     style={[input, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }]}

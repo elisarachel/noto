@@ -5,7 +5,7 @@ import uuid from 'react-native-uuid';
 
 type Props = {
     initial?: Partial<Discipline>;
-    onSubmit: (data: { name: string; professor?: string; code?: string; grading?: GradingScheme }) => void;
+    onSubmit: (data: { name: string; professor?: string; code?: string; grading?: GradingScheme, maxAbsences?: number }) => void;
     onCancel?: () => void;
 };
 
@@ -24,6 +24,10 @@ export default function DisciplinaForm({ initial, onSubmit, onCancel }: Props) {
         initial?.grading?.scaleMax != null ? String(initial.grading.scaleMax) : '10'
     );
 
+	const [maxAbsences, setMaxAbsences] = useState(
+		initial?.maxAbsences != null ? String(initial.maxAbsences) : ''
+	);	
+
     useEffect(() => {
         if (initial) {
             setName(initial.name ?? '');
@@ -36,6 +40,7 @@ export default function DisciplinaForm({ initial, onSubmit, onCancel }: Props) {
             setScaleMax(
                 initial.grading?.scaleMax != null ? String(initial.grading.scaleMax) : '10'
             );
+			setMaxAbsences(initial?.maxAbsences != null ? String(initial.maxAbsences) : '');
         }
     }, [initial]);
 
@@ -79,11 +84,12 @@ export default function DisciplinaForm({ initial, onSubmit, onCancel }: Props) {
             : undefined;
 
         onSubmit({
-            name: name.trim(),
-            professor: professor.trim() || undefined,
-            code: code.trim() || undefined,
-            grading
-        });
+			name: name.trim(),
+			professor: professor.trim() || undefined,
+			code: code.trim() || undefined,
+			grading,
+			maxAbsences: maxAbsences ? Number(maxAbsences) : undefined
+		});
     };
 
 	const accessoryID = 'gradingWeightDone';
@@ -114,6 +120,17 @@ export default function DisciplinaForm({ initial, onSubmit, onCancel }: Props) {
                 placeholder="Ex.: T01-2025"
                 style={input}
             />
+
+			<Text>Máx. de faltas (opcional)</Text>
+			<TextInput
+				value={maxAbsences}
+				onChangeText={setMaxAbsences}
+				keyboardType="numeric"
+				inputMode="numeric"
+				placeholder="Ex.: 10"
+				style={input}
+			/>
+
 
             <View style={box}>
 				<Text style={{ fontSize: 16, fontWeight: '600' }}>Fórmula de avaliação</Text>

@@ -1,5 +1,5 @@
-import React, { useMemo, useRef, useState } from 'react';
-import { View, Text, ScrollView, NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
+import React, { useMemo } from 'react';
+import { View, Text, ScrollView } from 'react-native';
 import { Discipline, ClassSchedule } from '@/types';
 import { useAppTheme } from '@/hooks/useAppTheme';
 
@@ -11,11 +11,11 @@ type Props = {
 };
 
 const DAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-const PX_PER_MIN = 1;   // 60min = 60px (ajuste para 0.8 se quiser mais compacto)
+const PX_PER_MIN = 1;
 const TOP_PAD = 12;
 const BOTTOM_PAD = 12;
-const GUTTER_WIDTH = 40; // largura menor do gutter (horas) — ajustável
-const DAY_COL_WIDTH = 128; // largura coluna dia (ajustável)
+const GUTTER_WIDTH = 40;   // largura da coluna de horas
+const DAY_COL_WIDTH = 128; // largura de cada dia
 
 function normalizeWeekday(w: number) {
 	if (w >= 1 && w <= 7) return w % 7; // 7 -> 0 (Dom)
@@ -55,7 +55,7 @@ export default function WeekScheduleGrid({
 		});
 	}, [schedule]);
 
-	// range
+	// range vertical
 	const computedRange = useMemo(() => {
 		if (typeof minMinute === 'number' && typeof maxMinute === 'number') {
 			return { minMinute, maxMinute };
@@ -82,7 +82,7 @@ export default function WeekScheduleGrid({
 		return map;
 	}, [items]);
 
-	// hour lines (em coordenadas já com TOP_PAD)
+	// hour lines
 	const hourLines: { top: number; label: string }[] = [];
 	for (let m = computedRange.minMinute; m <= computedRange.maxMinute; m += 60) {
 		const top = TOP_PAD + (m - computedRange.minMinute) * PX_PER_MIN;
@@ -90,49 +90,32 @@ export default function WeekScheduleGrid({
 		hourLines.push({ top, label });
 	}
 
-	// ==== SYNC SCROLL: gutter (esquerda) <-> grid (direita) ====
-	const gutterRef = useRef<ScrollView>(null);
-	const gridRef = useRef<ScrollView>(null);
-	const [syncing, setSyncing] = useState<'none' | 'gutter' | 'grid'>('none');
-
-	const onGridScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-		if (syncing === 'gutter') return; // evita loop
-		setSyncing('grid');
-		const y = e.nativeEvent.contentOffset.y;
-		gutterRef.current?.scrollTo({ y, animated: false });
-		setSyncing('none');
-	};
-
-	const onGutterScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-		if (syncing === 'grid') return; // evita loop
-		setSyncing('gutter');
-		const y = e.nativeEvent.contentOffset.y;
-		gridRef.current?.scrollTo({ y, animated: false });
-		setSyncing('none');
-	};
-
 	return (
-		<View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
-			{/* GUTTER VERTICAL (horas) — rola só na vertical, sincronizado */}
-			<ScrollView
-				ref={gutterRef}
-				showsVerticalScrollIndicator={false}
-				scrollEventThrottle={16}
-				onScroll={onGutterScroll}
-				style={{ maxHeight: 420 }}
-				contentContainerStyle={{ paddingLeft: 0 }}
-			>
-				{/* largura fixa do gutter */}
+		<ScrollView
+			style={{ maxHeight: 420 }}
+			showsVerticalScrollIndicator={false}
+			contentContainerStyle={{ paddingLeft: 0, paddingRight: 0 }}
+		>
+			<View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
+				{/* GUTTER DE HORAS */}
 				<View style={{ width: GUTTER_WIDTH }}>
-					<View style={{ height: trackHeight, position: 'relative' }}>
+					<View style={{ height: trackHeight, position: 'relative', width: '100%' }}>
 						{hourLines.map((h) => (
-							<View key={h.top} style={{ position: 'absolute', top: h.top - 8, left: 0, width: GUTTER_WIDTH }}>
+							<View
+								key={h.top}
+								style={{
+									position: 'absolute',
+									top: h.top - 8,
+									left: 0,
+									right: 0,
+									alignItems: 'flex-end',
+								}}
+							>
 								<Text
 									style={{
 										color: colors.textMuted,
 										fontSize: 12,
-										textAlign: 'right',
-										paddingRight: 6,
+										paddingRight: 0,
 									}}
 								>
 									{h.label}
@@ -141,28 +124,36 @@ export default function WeekScheduleGrid({
 						))}
 					</View>
 				</View>
-			</ScrollView>
 
-			{/* GRADE: Scroll vertical (sync) + Scroll horizontal (dias) */}
-			<ScrollView
-				ref={gridRef}
-				showsVerticalScrollIndicator={false}
-				scrollEventThrottle={16}
-				onScroll={onGridScroll}
-				style={{ maxHeight: 420, flex: 1 }}
-			>
+				{/* PEQUENO ESPAÇO ENTRE HORAS E GRADE */}
+				<View style={{ width: 4 }} />
+
+				{/* GRADE DE DIAS (scroll horizontal) */}
 				<ScrollView
 					horizontal
 					showsHorizontalScrollIndicator={false}
-					contentContainerStyle={{ paddingLeft: 0 }}
+					contentContainerStyle={{ paddingLeft: 0, paddingRight: 0 }}
 				>
 					<View style={{ flexDirection: 'row' }}>
 						{DAYS.map((dayLabel, dayIdx) => (
-							<View key={dayIdx} style={{ width: DAY_COL_WIDTH, marginRight: 6 }}>
-								{/* Cabeçalho do dia */}
-								<Text style={{ textAlign: 'center', fontWeight: '700', marginBottom: 8, color: colors.text }}>{dayLabel}</Text>
+							<View
+								key={dayIdx}
+								style={{
+									width: DAY_COL_WIDTH,
+									marginRight: dayIdx === DAYS.length - 1 ? 0 : 6,
+								}}
+							>
+								<Text
+									style={{
+										textAlign: 'center',
+										fontWeight: '700',
+										marginBottom: 8,
+										color: colors.text,
+									}}
+								>
+									{dayLabel}
+								</Text>
 
-								{/* Track */}
 								<View
 									style={{
 										height: trackHeight,
@@ -172,7 +163,7 @@ export default function WeekScheduleGrid({
 									}}
 								>
 									<View style={{ position: 'relative', height: '100%' }}>
-										{/* Linhas de grade por hora */}
+										{/* linhas de grade */}
 										{hourLines.map((h) => (
 											<View
 												key={h.top}
@@ -187,11 +178,12 @@ export default function WeekScheduleGrid({
 											/>
 										))}
 
-										{/* Blocos de aula */}
+										{/* blocos de aula */}
 										{byDay[dayIdx].map((block) => {
 											const top = TOP_PAD + (block.startMin - computedRange.minMinute) * PX_PER_MIN;
 											const height = (block.endMin - block.startMin) * PX_PER_MIN;
 											const disc = disciplines.find((d) => d.id === block.disciplineId);
+
 											return (
 												<View
 													key={block.id}
@@ -226,7 +218,7 @@ export default function WeekScheduleGrid({
 						))}
 					</View>
 				</ScrollView>
-			</ScrollView>
-		</View>
+			</View>
+		</ScrollView>
 	);
 }

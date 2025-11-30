@@ -13,7 +13,7 @@ import {
 	Switch
 } from 'react-native';
 import * as Notifications from 'expo-notifications';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import { useApp } from '@/context/AppContext';
 import { useAppTheme } from '@/hooks/useAppTheme';
@@ -238,32 +238,12 @@ export default function ProfileAndSettingsScreen() {
 								/>
 							</LabeledRow>
 
-							<LabeledRow label="Idioma" rowBox={rowBox}>
-								<Segmented<TLang>
-									value={lang}
-									options={[
-										{ key: 'pt', label: 'PT' },
-										{ key: 'en', label: 'EN' }
-									]}
-									onChange={setLang}
-								/>
-							</LabeledRow>
-
 							<LabeledRow label="Notificações" rowBox={rowBox}>
 								<Switch
 									value={notificationsOn}
 									onValueChange={setNotificationsOn}
 									trackColor={{ true: colors.primary }}
 									thumbColor={notificationsOn ? colors.onPrimary : undefined}
-								/>
-							</LabeledRow>
-
-							<LabeledRow label="Sincronizar com a nuvem" rowBox={rowBox}>
-								<Switch
-									value={syncCloud}
-									onValueChange={setSyncCloud}
-									trackColor={{ true: colors.primary }}
-									thumbColor={syncCloud ? colors.onPrimary : undefined}
 								/>
 							</LabeledRow>
 

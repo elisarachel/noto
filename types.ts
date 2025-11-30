@@ -1,13 +1,22 @@
 export type StudyPeriod = 'matutino' | 'integral' | 'noturno';
 
 export type Profile = {
-	id?: string;
-	name?: string;
+	id: string;
+	name: string;
 	course?: string;
 	institution?: string;
 	semester?: string;
-	studyPeriod?: StudyPeriod;
+
+	// preferências
+	theme?: 'light' | 'dark' | 'system';
+	lang?: 'pt' | 'en';
+	syncCloud?: boolean;
+	notificationsOn?: boolean;
+
+	// período para grade semanal / atalho
+	studyPeriod?: 'matutino' | 'integral' | 'noturno';
 };
+
 
 export type Discipline = {
 	id: string;
@@ -16,6 +25,8 @@ export type Discipline = {
 	code?: string;
 	createdAt: number;
 	grading?: GradingScheme;
+	colorHex?: string;         // ← novo
+	iconName?: string;         // ← Ionicons name, ex.: "book-outline"
 	maxAbsences?: number;   // ex.: 25 (aula)
 	absences?: number;      // contagem atual
 };

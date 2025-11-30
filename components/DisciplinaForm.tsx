@@ -2,10 +2,11 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, TextInput, Pressable, Alert, Platform, Keyboard, InputAccessoryView } from 'react-native';
 import { AssessmentComponent, Discipline, GradingScheme } from '@/types';
 import uuid from 'react-native-uuid';
+import { useAppTheme } from '@/hooks/useAppTheme';
 
 type Props = {
     initial?: Partial<Discipline>;
-    onSubmit: (data: { name: string; professor?: string; code?: string; grading?: GradingScheme, maxAbsences?: number }) => void;
+    onSubmit: (data: { name: string; professor?: string; code?: string; grading?: GradingScheme, maxAbsences?: number; colorHex?: string; iconName?: string }) => void;
     onCancel?: () => void;
 };
 
@@ -13,6 +14,8 @@ export default function DisciplinaForm({ initial, onSubmit, onCancel }: Props) {
     const [name, setName] = useState(initial?.name ?? '');
     const [professor, setProfessor] = useState(initial?.professor ?? '');
     const [code, setCode] = useState(initial?.code ?? '');
+	const [colorHex, setColorHex] = useState(initial?.colorHex ?? '#6366f1');
+	const [iconName, setIconName] = useState(initial?.iconName ?? 'book-outline');
 
     const [components, setComponents] = useState<AssessmentComponent[]>(
         initial?.grading?.components ?? []
@@ -26,7 +29,9 @@ export default function DisciplinaForm({ initial, onSubmit, onCancel }: Props) {
 
 	const [maxAbsences, setMaxAbsences] = useState(
 		initial?.maxAbsences != null ? String(initial.maxAbsences) : ''
-	);	
+	);
+
+	const { colors } = useAppTheme();
 
     useEffect(() => {
         if (initial) {
@@ -41,6 +46,8 @@ export default function DisciplinaForm({ initial, onSubmit, onCancel }: Props) {
                 initial.grading?.scaleMax != null ? String(initial.grading.scaleMax) : '10'
             );
 			setMaxAbsences(initial?.maxAbsences != null ? String(initial.maxAbsences) : '');
+			setColorHex(initial?.colorHex != null ? String(initial.colorHex) : '#6366f1');
+			setIconName(initial?.iconName != null ? String(initial.iconName) : 'book-outline');
         }
     }, [initial]);
 
@@ -88,40 +95,53 @@ export default function DisciplinaForm({ initial, onSubmit, onCancel }: Props) {
 			professor: professor.trim() || undefined,
 			code: code.trim() || undefined,
 			grading,
-			maxAbsences: maxAbsences ? Number(maxAbsences) : undefined
+			maxAbsences: maxAbsences ? Number(maxAbsences) : undefined,
+			colorHex: colorHex || undefined,
+			iconName: iconName || undefined
 		});
     };
 
 	const accessoryID = 'gradingWeightDone';
 
+    // estilos dependentes do tema
+	const input = { borderWidth: 1, borderColor: colors.border, padding: 12, borderRadius: 8, color: colors.text } as const;
+	const box = { marginTop: 8, padding: 12, borderWidth: 1, borderColor: colors.border, borderRadius: 10, backgroundColor: colors.cardBg, gap: 10 } as const;
+	const chip = { backgroundColor: colors.border, paddingVertical: 8, paddingHorizontal: 10, borderRadius: 10, alignSelf: 'flex-start' } as const;
+	const chipDanger = { backgroundColor: '#b91c1c', paddingVertical: 10, paddingHorizontal: 10, borderRadius: 10 } as const;
+	const btnPrimary = { backgroundColor: colors.primary, paddingVertical: 12, paddingHorizontal: 16, borderRadius: 10 } as const;
+	const btnSecondary = { backgroundColor: colors.border, paddingVertical: 12, paddingHorizontal: 16, borderRadius: 10 } as const;
+
     return (
         <View style={{ gap: 10 }}>
             {/* Campos básicos */}
-            <Text>Nome da disciplina*</Text>
+            <Text style={{ color: colors.text }}>Nome da disciplina*</Text>
             <TextInput
                 value={name}
                 onChangeText={setName}
                 placeholder="Ex.: Cálculo I"
                 style={input}
+                placeholderTextColor={colors.textMuted}
             />
 
-            <Text>Professor(a)</Text>
+            <Text style={{ color: colors.text }}>Professor(a)</Text>
             <TextInput
                 value={professor}
                 onChangeText={setProfessor}
                 placeholder="Ex.: Profa. Maria"
                 style={input}
+                placeholderTextColor={colors.textMuted}
             />
 
-            <Text>Código da turma</Text>
+            <Text style={{ color: colors.text }}>Código da turma</Text>
             <TextInput
                 value={code}
                 onChangeText={setCode}
                 placeholder="Ex.: T01-2025"
                 style={input}
+                placeholderTextColor={colors.textMuted}
             />
 
-			<Text>Máx. de faltas (opcional)</Text>
+			<Text style={{ color: colors.text }}>Máx. de faltas (opcional)</Text>
 			<TextInput
 				value={maxAbsences}
 				onChangeText={setMaxAbsences}
@@ -129,11 +149,12 @@ export default function DisciplinaForm({ initial, onSubmit, onCancel }: Props) {
 				inputMode="numeric"
 				placeholder="Ex.: 10"
 				style={input}
+				placeholderTextColor={colors.textMuted}
 			/>
 
 
             <View style={box}>
-				<Text style={{ fontSize: 16, fontWeight: '600' }}>Fórmula de avaliação</Text>
+				<Text style={{ fontSize: 16, fontWeight: '600', color: colors.text }}>Fórmula de avaliação</Text>
 
 				{components.map((c, idx) => (
 					<View
@@ -141,11 +162,11 @@ export default function DisciplinaForm({ initial, onSubmit, onCancel }: Props) {
 						style={{
 							paddingVertical: 6,
 							borderBottomWidth: idx === components.length - 1 ? 0 : 1,
-							borderColor: '#e5e7eb',
+							borderColor: colors.border,
 							gap: 4
 						}}
 					>
-						<Text style={{ color: '#374151', fontWeight: '500' }}>
+						<Text style={{ color: colors.text, fontWeight: '500' }}>
 							Componente {idx + 1}
 						</Text>
 						<View
@@ -157,7 +178,7 @@ export default function DisciplinaForm({ initial, onSubmit, onCancel }: Props) {
 							}}
 						>
 							<View style={{ flex: 1 }}>
-								<Text style={{ color: '#6b7280', marginBottom: 2 }}>
+								<Text style={{ color: colors.textMuted, marginBottom: 2 }}>
 									Nome
 								</Text>
 								<TextInput
@@ -165,11 +186,12 @@ export default function DisciplinaForm({ initial, onSubmit, onCancel }: Props) {
 									onChangeText={(t) => updateComponent(c.id, { label: t })}
 									placeholder="Ex.: Provas"
 									style={[input, { flex: 1 }]}
+									placeholderTextColor={colors.textMuted}
 								/>
 							</View>
 
 							<View style={{ width: 90 }}>
-								<Text style={{ color: '#6b7280', marginBottom: 2 }}>
+								<Text style={{ color: colors.textMuted, marginBottom: 2 }}>
 									Peso (%)
 								</Text>
 								<TextInput
@@ -180,6 +202,7 @@ export default function DisciplinaForm({ initial, onSubmit, onCancel }: Props) {
 									placeholder="%"
 									keyboardType="numeric"
 									style={[input, { textAlign: 'center' }]}
+									placeholderTextColor={colors.textMuted}
 								/>
 							</View>
 
@@ -196,7 +219,7 @@ export default function DisciplinaForm({ initial, onSubmit, onCancel }: Props) {
 				))}
 
 				<Pressable onPress={addComponent} style={chip}>
-					<Text>+ Adicionar componente</Text>
+					<Text style={{ color: colors.text }}>+ Adicionar componente</Text>
 				</Pressable>
 
 				<Text
@@ -210,46 +233,59 @@ export default function DisciplinaForm({ initial, onSubmit, onCancel }: Props) {
 
 				<View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
 					<View style={{ flex: 1 }}>
-						<Text>Mínimo para aprovação</Text>
+						<Text style={{ color: colors.text }}>Mínimo para aprovação</Text>
 						<TextInput
 							value={approvalThreshold}
 							onChangeText={setApprovalThreshold}
 							keyboardType="numeric"
 							style={input}
 							placeholder="Ex.: 6.0"
+							placeholderTextColor={colors.textMuted}
 						/>
 					</View>
 					<View style={{ width: 140 }}>
-						<Text>Escala máxima</Text>
+						<Text style={{ color: colors.text }}>Escala máxima</Text>
 						<TextInput
 							value={scaleMax}
 							onChangeText={setScaleMax}
 							keyboardType="numeric"
 							style={input}
 							placeholder="Ex.: 10"
+							placeholderTextColor={colors.textMuted}
 						/>
 					</View>
 				</View>
 			</View>
 
+			<Text style={{ color: colors.text }}>Cor (hex)</Text>
+				<TextInput
+					value={colorHex}
+					onChangeText={setColorHex}
+					placeholder="#6366f1"
+					style={input}
+					placeholderTextColor={colors.textMuted}
+				/>
+
+				<Text style={{ color: colors.text }}>Ícone (Ionicons)</Text>
+				<TextInput
+					value={iconName}
+					onChangeText={setIconName}
+					placeholder="book-outline, school-outline, document-text-outline..."
+					style={input}
+					placeholderTextColor={colors.textMuted}
+				/>
+
 
             <View style={{ flexDirection: 'row', gap: 10 }}>
                 <Pressable onPress={handleSubmit} style={btnPrimary}>
-                    <Text style={{ color: '#fff', fontWeight: '600' }}>Salvar</Text>
+                    <Text style={{ color: colors.onPrimary, fontWeight: '600' }}>Salvar</Text>
                 </Pressable>
                 {onCancel && (
                     <Pressable onPress={onCancel} style={btnSecondary}>
-                        <Text>Cancelar</Text>
+                        <Text style={{ color: colors.text }}>Cancelar</Text>
                     </Pressable>
                 )}
             </View>
         </View>
     );
 }
-
-const input = { borderWidth: 1, borderColor: '#ccc', padding: 12, borderRadius: 8 } as const;
-const box = { marginTop: 8, padding: 12, borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 10, backgroundColor: '#f9fafb', gap: 10 } as const;
-const chip = { backgroundColor: '#e5e7eb', paddingVertical: 8, paddingHorizontal: 10, borderRadius: 10, alignSelf: 'flex-start' } as const;
-const chipDanger = { backgroundColor: '#b91c1c', paddingVertical: 10, paddingHorizontal: 10, borderRadius: 10 } as const;
-const btnPrimary = { backgroundColor: '#1e40af', paddingVertical: 12, paddingHorizontal: 16, borderRadius: 10 } as const;
-const btnSecondary = { backgroundColor: '#e5e7eb', paddingVertical: 12, paddingHorizontal: 16, borderRadius: 10 } as const;

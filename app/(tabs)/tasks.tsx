@@ -4,6 +4,7 @@ import { useApp } from '@/context/AppContext';
 import TaskForm from '@/components/TaskForm';
 import { Task } from '@/types';
 import { Ionicons } from '@expo/vector-icons';
+import { useAppTheme } from '@/hooks/useAppTheme';
 
 const typeLabels = {
     prova: 'Prova',
@@ -12,22 +13,27 @@ const typeLabels = {
 };
 
 export default function TasksScreen() {
+    const { colors } = useAppTheme();
     const { disciplines, tasks, addTask, updateTask, removeTask } = useApp();
     const [creating, setCreating] = useState(false);
     const [editing, setEditing] = useState<Task | null>(null);
     const [showPast, setShowPast] = useState(false);
 
+    // estilos que antes faltavam (usem o tema)
+    const card = { backgroundColor: colors.cardBg, padding: 16, borderRadius: 12, gap: 12 } as const;
+    const title = { fontSize: 16, fontWeight: '600', color: colors.text } as const;
+
     // inputs locais por tarefa (evita warnings controlado/não-controlado)
-        const [gradeInputs, setGradeInputs] = useState<Record<string, { grade: string; max: string }>>({});
-        const getInputs = useCallback((t: Task) => {
-            const existing = gradeInputs[t.id] ?? {};
-            return {
-                grade: existing.grade ?? (t.grade != null ? String(t.grade) : ''),
-                max: existing.max ?? String(t.gradeMax ?? 10),
-            } as { grade: string; max: string };
-        }, [gradeInputs]);
-        const setInputFor = (id: string, patch: Partial<{ grade: string; max: string }>) =>
-            setGradeInputs(prev => ({ ...prev, [id]: { ...(prev[id] ?? ({} as any)), ...patch } }));
+    const [gradeInputs, setGradeInputs] = useState<Record<string, { grade: string; max: string }>>({});
+    const getInputs = useCallback((t: Task) => {
+        const existing = gradeInputs[t.id] ?? {};
+        return {
+            grade: existing.grade ?? (t.grade != null ? String(t.grade) : ''),
+            max: existing.max ?? String(t.gradeMax ?? 10),
+        } as { grade: string; max: string };
+    }, [gradeInputs]);
+    const setInputFor = (id: string, patch: Partial<{ grade: string; max: string }>) =>
+        setGradeInputs(prev => ({ ...prev, [id]: { ...(prev[id] ?? ({} as any)), ...patch } }));
 
     const persistGrade = useCallback(async (t: Task) => {
 		const cur = getInputs(t);
@@ -75,65 +81,95 @@ export default function TasksScreen() {
     const renderTask = ({ item }: { item: Task }) => {
         const disciplineName = disciplines.find(d => d.id === item.disciplineId)?.name ?? '—';
 
-		const inputs = getInputs(item);
-		const canSave =
-			inputs.grade.trim().length > 0 &&
-			!Number.isNaN(Number(inputs.grade.replace(',', '.'))) &&
-			inputs.max.trim().length > 0 &&
-			!Number.isNaN(Number(inputs.max.replace(',', '.')));
+        const inputs = getInputs(item);
+        const canSave =
+            inputs.grade.trim().length > 0 &&
+            !Number.isNaN(Number(inputs.grade.replace(',', '.'))) &&
+            inputs.max.trim().length > 0 &&
+            !Number.isNaN(Number(inputs.max.replace(',', '.')));
 
         return (
-            <View style={row}>
+            <View style={{
+                backgroundColor: colors.surface,
+                borderWidth: 1,
+                borderColor: colors.border,
+                padding: 14,
+                borderRadius: 10,
+                flexDirection: 'row',
+                alignItems: 'flex-start',
+                gap: 12,
+            }}>
                 <View style={{ flex: 1, gap: 2 }}>
-                    <Text style={{ fontSize: 16, fontWeight: '600' }}>
+                    <Text style={{ fontSize: 16, fontWeight: '600', color: colors.text }}>
                         {typeLabels[item.type]} – {item.title}
                     </Text>
-                    <Text style={{ color: '#1e40af', fontWeight: '500' }}>{disciplineName}</Text>
-                    <Text>{new Date(item.dueDate).toLocaleString()}</Text>
-                    {!!item.notes && <Text style={{ color: '#555' }}>{item.notes}</Text>}
+                    <Text style={{ color: colors.primary, fontWeight: '500' }}>{disciplineName}</Text>
+                    <Text style={{ color: colors.textMuted }}>{new Date(item.dueDate).toLocaleString()}</Text>
+                    {!!item.notes && <Text style={{ color: colors.textMuted }}>{item.notes}</Text>}
 
                     {/* NOTA inline (com botão Salvar) */}
                     <View style={{ marginTop: 8, gap: 6 }}>
                         {item.grade == null ? (
                             <>
-                                <Text style={{ color: '#374151', fontWeight: '500' }}>Lançar nota:</Text>
+                                <Text style={{ color: colors.text, fontWeight: '500' }}>Lançar nota:</Text>
                                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                                     <TextInput
                                         placeholder="8.5"
                                         keyboardType="numeric"
                                         value={getInputs(item).grade}
                                         onChangeText={text => setInputFor(item.id, { grade: text })}
-                                        style={[inputSmall, { width: 80 }]}
+                                        style={[{
+                                            borderWidth: 1,
+                                            borderColor: colors.border,
+                                            paddingVertical: 6,
+                                            paddingHorizontal: 8,
+                                            borderRadius: 8,
+                                            backgroundColor: colors.cardBg,
+                                            color: colors.text
+                                        }, { width: 80 }]}
+                                        placeholderTextColor={colors.textMuted}
                                     />
-                                    <Text style={{ color: '#6b7280' }}>/</Text>
+                                    <Text style={{ color: colors.textMuted }}>/</Text>
                                     <TextInput
                                         placeholder="10"
                                         keyboardType="numeric"
                                         value={getInputs(item).max}
                                         onChangeText={text => setInputFor(item.id, { max: text })}
-                                        style={[inputSmall, { width: 80 }]}
+                                        style={[{
+                                            borderWidth: 1,
+                                            borderColor: colors.border,
+                                            paddingVertical: 6,
+                                            paddingHorizontal: 8,
+                                            borderRadius: 8,
+                                            backgroundColor: colors.cardBg,
+                                            color: colors.text
+                                        }, { width: 80 }]}
+                                        placeholderTextColor={colors.textMuted}
                                     />
                                     <Pressable
-										onPress={() => persistGrade(item)}
-										disabled={!canSave}
-										style={[
-											chip,
-											{
-												backgroundColor: canSave ? '#1e40af' : '#9ca3af',
-												opacity: canSave ? 1 : 0.7
-											}
-										]}
-									>
-										<Text style={{ color: '#fff', fontWeight: '600' }}>Salvar</Text>
-									</Pressable>
+                                        onPress={() => persistGrade(item)}
+                                        disabled={!canSave}
+                                        style={[
+                                            {
+                                                backgroundColor: canSave ? colors.primary : colors.textMuted,
+                                                paddingVertical: 8,
+                                                paddingHorizontal: 10,
+                                                borderRadius: 10,
+                                                opacity: canSave ? 1 : 0.7,
+                                                alignItems: 'center'
+                                            }
+                                        ]}
+                                    >
+                                        <Text style={{ color: colors.onPrimary, fontWeight: '600' }}>Salvar</Text>
+                                    </Pressable>
                                 </View>
                             </>
                         ) : (
                             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                                 <Ionicons name="checkmark-circle-outline" size={18} color="#16a34a" />
-                                <Text style={{ fontWeight: '600', color: '#111827' }}>
+                                <Text style={{ fontWeight: '600', color: colors.text }}>
                                     Nota: {item.grade}{' '}
-                                    <Text style={{ color: '#6b7280' }}>/ {item.gradeMax ?? 10}</Text>
+                                    <Text style={{ color: colors.textMuted }}>/ {item.gradeMax ?? 10}</Text>
                                 </Text>
                                 <Pressable
                                     onPress={() => {
@@ -144,9 +180,14 @@ export default function TasksScreen() {
                                         });
                                         updateTask(item.id, { grade: undefined });
                                     }}
-                                    style={chip}
+                                    style={{
+                                        backgroundColor: colors.border,
+                                        paddingVertical: 8,
+                                        paddingHorizontal: 10,
+                                        borderRadius: 10,
+                                    }}
                                 >
-                                    <Text>Editar nota</Text>
+                                    <Text style={{ color: colors.text }}>Editar nota</Text>
                                 </Pressable>
                             </View>
                         )}
@@ -155,16 +196,16 @@ export default function TasksScreen() {
 
                 {/* coluna direita (ações) */}
                 <View style={{ gap: 8 }}>
-                    <Pressable onPress={() => setEditing(item)} style={chip}>
-                        <Text>Editar</Text>
+                    <Pressable onPress={() => setEditing(item)} style={{ backgroundColor: colors.border, paddingVertical: 8, paddingHorizontal: 10, borderRadius: 10 }}>
+                        <Text style={{ color: colors.text }}>Editar</Text>
                     </Pressable>
-                    <Pressable onPress={() => removeTask(item.id)} style={chipDanger}>
+                    <Pressable onPress={() => removeTask(item.id)} style={{ backgroundColor: '#b91c1c', paddingVertical: 8, paddingHorizontal: 10, borderRadius: 10 }}>
                         <Text style={{ color: '#fff' }}>Excluir</Text>
                     </Pressable>
                 </View>
             </View>
-        );
-    };
+         );
+     };
 
     const sections = useMemo(
         () => [
@@ -175,17 +216,17 @@ export default function TasksScreen() {
     );
 
     return (
-        <View style={{ flex: 1, padding: 16, gap: 16 }}>
+        <View style={{ flex: 1, padding: 16, gap: 16, backgroundColor: colors.background }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Text style={{ fontSize: 22, fontWeight: '700' }}>Avaliações & Trabalhos</Text>
+                <Text style={{ fontSize: 22, fontWeight: '700', color: colors.text }}>Avaliações & Trabalhos</Text>
                 <Pressable
                     onPress={() => {
                         setCreating(true);
                         setEditing(null);
                     }}
-                    style={btn}
+                    style={{ backgroundColor: colors.primary, paddingVertical: 10, paddingHorizontal: 14, borderRadius: 10 }}
                 >
-                    <Text style={{ color: '#fff', fontWeight: '600' }}>Novo</Text>
+                    <Text style={{ color: colors.onPrimary, fontWeight: '600' }}>Novo</Text>
                 </Pressable>
             </View>
 
@@ -235,8 +276,8 @@ export default function TasksScreen() {
                                 onPress={() => setShowPast(s => !s)}
                                 style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 }}
                             >
-                                <Ionicons name={showPast ? 'chevron-down' : 'chevron-forward'} size={18} color="#374151" />
-                                <Text style={{ fontWeight: '600', color: '#374151' }}>
+                                <Ionicons name={showPast ? 'chevron-down' : 'chevron-forward'} size={18} color={colors.textMuted} />
+                                <Text style={{ fontWeight: '600', color: colors.textMuted }}>
                                     {showPast ? 'Ocultar' : 'Mostrar'} passadas ({past.length})
                                 </Text>
                             </Pressable>
@@ -251,56 +292,11 @@ export default function TasksScreen() {
 }
 
 function SectionHeader({ label }: { label: string }) {
+    const { colors } = useAppTheme();
     return (
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 }}>
-            <Ionicons name="calendar-outline" size={18} color="#374151" />
-            <Text style={{ fontSize: 16, fontWeight: '600', color: '#374151' }}>{label}</Text>
+            <Ionicons name="calendar-outline" size={18} color={colors.textMuted} />
+            <Text style={{ fontSize: 16, fontWeight: '600', color: colors.textMuted }}>{label}</Text>
         </View>
     );
 }
-
-const inputSmall = {
-    borderWidth: 1,
-    borderColor: '#d1d5db',
-    paddingVertical: 6,
-    paddingHorizontal: 8,
-    borderRadius: 8,
-    backgroundColor: '#fff',
-};
-
-const btn = {
-    backgroundColor: '#1e40af',
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    borderRadius: 10,
-} as const;
-
-const card = { backgroundColor: '#f3f4f6', padding: 16, borderRadius: 12, gap: 12 } as const;
-const title = { fontSize: 16, fontWeight: '600' } as const;
-
-const row = {
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-    padding: 14,
-    borderRadius: 10,
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 12,
-} as const;
-
-const chip = {
-    backgroundColor: '#e5e7eb',
-    paddingVertical: 8,
-    paddingHorizontal: 10,
-    borderRadius: 10,
-    alignItems: 'center',
-} as const;
-
-const chipDanger = {
-    backgroundColor: '#b91c1c',
-    paddingVertical: 8,
-    paddingHorizontal: 10,
-    borderRadius: 10,
-    alignItems: 'center',
-} as const;

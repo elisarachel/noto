@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, TextInput, Pressable, Alert, Platform, ScrollView, KeyboardAvoidingView } from 'react-native';
 import { Discipline, Task } from '@/types';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import { useAppTheme } from '@/hooks/useAppTheme';
 
 const typeLabels = {
     prova: 'Prova',
@@ -17,14 +18,15 @@ type TaskFormProps = {
 };
 
 export default function TaskForm({ disciplines, initial, onSubmit, onCancel }: TaskFormProps) {
-    const [title, setTitle] = useState(initial?.title ?? '');
-    const [type, setType] = useState<Task['type']>( (initial?.type as any) ?? 'prova' );
-    const [disciplineId, setDisciplineId] = useState(initial?.disciplineId ?? (disciplines[0]?.id ?? ''));
-    const [dueDate, setDueDate] = useState(initial?.dueDate ?? new Date().toISOString());
-    const [notes, setNotes] = useState(initial?.notes ?? '');
+    const { colors } = useAppTheme();
+     const [title, setTitle] = useState(initial?.title ?? '');
+     const [type, setType] = useState<Task['type']>( (initial?.type as any) ?? 'prova' );
+     const [disciplineId, setDisciplineId] = useState(initial?.disciplineId ?? (disciplines[0]?.id ?? ''));
+     const [dueDate, setDueDate] = useState(initial?.dueDate ?? new Date().toISOString());
+     const [notes, setNotes] = useState(initial?.notes ?? '');
 
-    const [componentId, setComponentId] = useState<string | undefined>(initial?.componentId);
-	const [showPicker, setShowPicker] = useState(false);
+     const [componentId, setComponentId] = useState<string | undefined>(initial?.componentId);
+     const [showPicker, setShowPicker] = useState(false);
 
     // componentes da disciplina selecionada
     const selectedDiscipline = useMemo(
@@ -72,120 +74,119 @@ export default function TaskForm({ disciplines, initial, onSubmit, onCancel }: T
         } as Omit<Task, 'id' | 'createdAt'>);
     };
 
-    return (
-        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ width: '100%' }}>
-            <ScrollView contentContainerStyle={{ gap: 10, paddingBottom: 100 }} keyboardShouldPersistTaps="handled">
-                <View style={{ gap: 10 }}>
-            <Text>Título*</Text>
-            <TextInput
-                value={title}
-                onChangeText={setTitle}
-                placeholder="Ex.: Prova 1"
-                style={input}
-            />
+    // estilos dependentes do tema
+    const inputStyle = { borderWidth: 1, borderColor: colors.border, padding: 12, borderRadius: 8, backgroundColor: colors.cardBg, color: colors.text } as const;
+    const typeButton = (active: boolean) => ({ padding:8, borderRadius:6, backgroundColor: active ? colors.primary : colors.border });
+    const typeText = (active: boolean) => ({ color: active ? colors.onPrimary : colors.text });
+    const disciplineButton = (active: boolean) => ({ padding:8, borderWidth:1, borderColor: active ? colors.primary : colors.border, borderRadius:6, marginBottom:4, backgroundColor: active ? colors.mutedBg : colors.surface });
+    const componentButton = (active: boolean) => ({ padding:8, borderWidth:1, borderColor: active ? colors.primary : colors.border, borderRadius:6, marginBottom:4, backgroundColor: active ? colors.mutedBg : colors.surface });
+    const dateRow = [inputStyle, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }];
+    const btnPrimaryLocal = { backgroundColor: colors.primary, paddingVertical: 12, paddingHorizontal: 16, borderRadius: 10 } as const;
+    const btnSecondaryLocal = { backgroundColor: colors.border, paddingVertical: 12, paddingHorizontal: 16, borderRadius: 10 } as const;
 
-            <Text>Tipo</Text>
-            <View style={{ flexDirection:'row', gap:6 }}>
+    return (
+        <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            style={{ width: '100%', backgroundColor: colors.cardBg }}
+        >
+            <ScrollView
+                contentContainerStyle={{ gap: 10, paddingBottom: 100, backgroundColor: colors.cardBg }}
+                keyboardShouldPersistTaps="handled"
+            >
+                <View style={{ gap: 10, padding: 12 }}>
+                     <Text style={{ color: colors.text }}>Título*</Text>
+                    <TextInput
+                        value={title}
+                        onChangeText={setTitle}
+                        placeholder="Ex.: Prova 1"
+                        style={inputStyle}
+                        placeholderTextColor={colors.textMuted}
+                    />
+
+                    <Text style={{ color: colors.text }}>Tipo</Text>
+                    <View style={{ flexDirection:'row', gap:6 }}>
                         {(['prova','trabalho','projeto'] as const).map(t => (
                             <Pressable
                                 key={t}
                                 onPress={() => setType(t)}
-                                style={{
-                                    padding:8,
-                                    borderRadius:6,
-                                    backgroundColor: type === t ? '#1e40af' : '#e5e7eb'
-                                }}
+                                style={typeButton(type === t)}
                             >
-                                <Text style={{ color: type === t ? '#fff' : '#111' }}>{typeLabels[t]}</Text>
+                                <Text style={typeText(type === t)}>{typeLabels[t]}</Text>
                             </Pressable>
                         ))}
                     </View>
 
-            <Text>Disciplina</Text>
-           {disciplines.map(d => (
+                    <Text style={{ color: colors.text }}>Disciplina</Text>
+                    {disciplines.map(d => (
                         <Pressable
                             key={d.id}
                             onPress={() => setDisciplineId(d.id)}
-                            style={{
-                                padding:8, borderWidth:1,
-                                borderColor: d.id === disciplineId ? '#1e40af' : '#ccc',
-                                borderRadius:6, marginBottom:4
-                            }}
+                            style={disciplineButton(d.id === disciplineId)}
                         >
-                            <Text>{d.name}</Text>
+                            <Text style={{ color: d.id === disciplineId ? colors.onPrimary : colors.text }}>{d.name}</Text>
                         </Pressable>
-             ))}
-			
-			{components.length > 0 && (
-				<Text>Componente de nota associado</Text>
-			)}
-            {components.map(d => (
+                    ))}
+
+                    {components.length > 0 && (
+                        <Text style={{ color: colors.text }}>Componente de nota associado</Text>
+                    )}
+                    {components.map(d => (
                         <Pressable
                             key={d.id}
                             onPress={() => setComponentId(d.id)}
-                            style={{
-                                padding:8, borderWidth:1,
-                                borderColor: d.id === componentId ? '#1e40af' : '#ccc',
-                                borderRadius:6, marginBottom:4
-                            }}
+                            style={componentButton(d.id === componentId)}
                         >
-                            <Text>{d.label}</Text>
+                            <Text style={{ color: d.id === componentId ? colors.onPrimary : colors.text }}>{d.label}</Text>
                         </Pressable>
-             ))}
+                    ))}
 
-            <Text>Data e hora</Text>
-<Pressable
-    onPress={() => setShowPicker(true)}
-    style={[input, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }]}
->
-    <Text>{new Date(dueDate).toLocaleString('pt-BR')}</Text>
-    <Text style={{ color: '#1e40af', fontWeight: '600' }}>📅</Text>
-</Pressable>
-
-{showPicker && (
-    <DateTimePicker
-            value={new Date(dueDate)}
-            mode="datetime"
-            display={Platform.OS === 'ios' ? 'inline' : 'default'}
-            locale="pt-BR"
-            themeVariant="light"
-            textColor="#111827"
-            onChange={(event: DateTimePickerEvent, date?: Date) => {
-                if (event.type === 'set' && date) {
-                    setDueDate(date.toISOString());
-                }
-                if (Platform.OS !== 'ios') setShowPicker(false);
-            }}
-        />
-)}
-
-
-
-            <Text>Observações</Text>
-            <TextInput
-                value={notes}
-                onChangeText={setNotes}
-                placeholder="Detalhes da avaliação"
-                style={[input, { minHeight: 80 }]}
-                multiline
-            />
-
-            <View style={{ flexDirection: 'row', gap: 10, marginTop: 4 }}>
-                <Pressable onPress={handleSubmit} style={btnPrimary}>
-                    <Text style={{ color: '#fff', fontWeight: '600' }}>Salvar</Text>
-                </Pressable>
-                {onCancel && (
-                    <Pressable onPress={onCancel} style={btnSecondary}>
-                        <Text>Cancelar</Text>
+                    <Text style={{ color: colors.text }}>Data e hora</Text>
+                    <Pressable
+                        onPress={() => setShowPicker(true)}
+                        style={dateRow}
+                    >
+                        <Text style={{ color: colors.text }}>{new Date(dueDate).toLocaleString('pt-BR')}</Text>
+                        <Text style={{ color: colors.primary, fontWeight: '600' }}>📅</Text>
                     </Pressable>
-                )}
-            </View>
+
+                    {showPicker && (
+                        <DateTimePicker
+                            value={new Date(dueDate)}
+                            mode="datetime"
+                            display={Platform.OS === 'ios' ? 'inline' : 'default'}
+                            locale="pt-BR"
+                            onChange={(event: DateTimePickerEvent, date?: Date) => {
+                                if (event.type === 'set' && date) {
+                                    setDueDate(date.toISOString());
+                                }
+                                if (Platform.OS !== 'ios') setShowPicker(false);
+                            }}
+                            {...(Platform.OS === 'ios' ? { textColor: colors.text } : {})}
+                        />
+                    )}
+
+                    <Text style={{ color: colors.text }}>Observações</Text>
+                    <TextInput
+                        value={notes}
+                        onChangeText={setNotes}
+                        placeholder="Detalhes da avaliação"
+                        style={[inputStyle, { minHeight: 80 }]}
+                        multiline
+                        placeholderTextColor={colors.textMuted}
+                    />
+
+                    <View style={{ flexDirection: 'row', gap: 10, marginTop: 4 }}>
+                        <Pressable onPress={handleSubmit} style={btnPrimaryLocal}>
+                            <Text style={{ color: colors.onPrimary, fontWeight: '600' }}>Salvar</Text>
+                        </Pressable>
+                        {onCancel && (
+                            <Pressable onPress={onCancel} style={btnSecondaryLocal}>
+                                <Text style={{ color: colors.text }}>Cancelar</Text>
+                            </Pressable>
+                        )}
+                    </View>
                 </View>
             </ScrollView>
         </KeyboardAvoidingView>
     );
 }
-
-const input = { borderWidth: 1, borderColor: '#ccc', padding: 12, borderRadius: 8 } as const;
-const btnPrimary = { backgroundColor: '#1e40af', paddingVertical: 12, paddingHorizontal: 16, borderRadius: 10 } as const;
-const btnSecondary = { backgroundColor: '#e5e7eb', paddingVertical: 12, paddingHorizontal: 16, borderRadius: 10 } as const;

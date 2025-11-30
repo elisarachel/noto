@@ -2,6 +2,24 @@ import React, { createContext, useContext, useEffect, useMemo, useState } from '
 import { load, save } from '@/lib/storage';
 import { Profile, Discipline, Note, ClassSchedule, Task } from '@/types';
 import uuid from 'react-native-uuid';
+import { Appearance } from 'react-native';
+
+	function toICSDate(dt: Date) {
+		const pad = (n: number) => String(n).padStart(2, '0');
+		return (
+			dt.getUTCFullYear().toString() +
+			pad(dt.getUTCMonth() + 1) +
+			pad(dt.getUTCDate()) +
+			'T' +
+			pad(dt.getUTCHours()) +
+			pad(dt.getUTCMinutes()) +
+			pad(dt.getUTCSeconds()) +
+			'Z'
+		);
+	}
+
+
+	type AppThemeMode = 'light' | 'dark';
 
 	type AppState = {
 		profile?: Profile | null;
@@ -9,6 +27,8 @@ import uuid from 'react-native-uuid';
 		notes: Note[];
 		schedule: ClassSchedule[];
 		tasks: Task[];
+		effectiveTheme: AppThemeMode;
+		lang: 'pt' | 'en';
 		setProfile: (p: Profile | null) => Promise<void>;
 		addDiscipline: (d: Omit<Discipline, 'id' | 'createdAt'>) => Promise<void>;
 		updateDiscipline: (id: string, patch: Partial<Discipline>) => Promise<void>;
@@ -25,6 +45,8 @@ import uuid from 'react-native-uuid';
 		removeTask: (id: string) => Promise<void>;
 		incrementAbsence: (id: string, step?: number) => Promise<void>;
 		decrementAbsence: (id: string, step?: number) => Promise<void>;
+		syncNow: () => Promise<void>;
+		exportCalendarToICS: () => string;
 	};
 
 const AppContext = createContext<AppState | null>(null);
@@ -159,18 +181,90 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 		await updateDiscipline(id, patch);
 	}, [disciplines, updateDiscipline]);
 
+	const systemColorScheme = Appearance.getColorScheme(); // 'light' | 'dark' | null
+
+	const effectiveTheme: AppThemeMode = React.useMemo(() => {
+		const pref = profile?.theme ?? 'system';
+		if (pref === 'light') return 'light';
+		if (pref === 'dark') return 'dark';
+		// 'system'
+		return systemColorScheme === 'dark' ? 'dark' : 'light';
+	}, [profile?.theme, systemColorScheme]);
+
+	const lang: 'pt' | 'en' = (profile?.lang === 'en' ? 'en' : 'pt');
+
+		const syncNow = React.useCallback(async () => {
+		// Aqui é onde você pluga seu backend real no futuro.
+		// Por enquanto, só monta um payload e poderia mandar pra uma API.
+		const payload = {
+			profile,
+			disciplines,
+			notes,
+			schedule,
+			tasks
+		};
+
+		// Exemplo de como seria:
+		// await fetch('https://sua-api.com/sync', {
+		// 	method: 'POST',
+		// 	headers: { 'Content-Type': 'application/json' },
+		// 	body: JSON.stringify(payload)
+		// });
+
+		console.log('SYNC PAYLOAD ->', JSON.stringify(payload, null, 2));
+	}, [profile, disciplines, notes, schedule, tasks]);
+
+	const exportCalendarToICS = React.useCallback((): string => {
+		const lines: string[] = [];
+
+		lines.push('BEGIN:VCALENDAR');
+		lines.push('VERSION:2.0');
+		lines.push('PRODID:-//NotoApp//PT-BR//EN');
+
+		const now = new Date();
+		const dtStamp = toICSDate(now);
+
+		// Vamos exportar as TAREFAS como eventos no calendário
+		for (const t of tasks) {
+			const start = new Date(t.dueDate);
+			const end = new Date(start.getTime() + 60 * 60 * 1000); // +1h
+
+			const disc = disciplines.find(d => d.id === t.disciplineId);
+			const summary = `${disc?.name ?? 'Atividade'} – ${t.title}`;
+			const desc = t.notes ?? '';
+
+			lines.push('BEGIN:VEVENT');
+			lines.push(`UID:${t.id}@noto-app`);
+			lines.push(`DTSTAMP:${dtStamp}`);
+			lines.push(`DTSTART:${toICSDate(start)}`);
+			lines.push(`DTEND:${toICSDate(end)}`);
+			lines.push(`SUMMARY:${summary.replace(/\r?\n/g, ' ')}`);
+			if (desc) {
+				lines.push(`DESCRIPTION:${desc.replace(/\r?\n/g, ' ')}`);
+			}
+			lines.push('END:VEVENT');
+		}
+
+		lines.push('END:VCALENDAR');
+
+		return lines.join('\r\n');
+	}, [tasks, disciplines]);
+
+
 	const value = useMemo<AppState>(() => ({
-		profile, disciplines, notes, schedule, tasks,
+		profile, disciplines, notes, schedule, tasks,  effectiveTheme, lang,
 		setProfile, addDiscipline, updateDiscipline, removeDiscipline,
 		addNote, updateNote, removeNote, refresh,
 		addSchedule, removeSchedule, updateSchedule,
-		addTask, updateTask, removeTask, incrementAbsence, decrementAbsence
+		addTask, updateTask, removeTask, incrementAbsence, decrementAbsence, syncNow, exportCalendarToICS, 
 	}), [
 		profile,
 		disciplines,
 		notes,
 		schedule,
 		tasks,
+		effectiveTheme,
+		lang,
 		setProfile,
 		addDiscipline,
 		updateDiscipline,
@@ -186,7 +280,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 		updateTask,
 		removeTask,
 		incrementAbsence,
-		decrementAbsence
+		decrementAbsence,
+		syncNow,
+		exportCalendarToICS,
 	]);
 
 	return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
@@ -196,4 +292,9 @@ export const useApp = () => {
 	const ctx = useContext(AppContext);
 	if (!ctx) throw new Error('useApp must be used within AppProvider');
 	return ctx;
+};
+
+export const useThemeMode = () => {
+	const ctx = useApp();
+	return ctx.effectiveTheme;
 };

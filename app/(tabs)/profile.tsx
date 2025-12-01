@@ -17,13 +17,16 @@ import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import { useApp } from '@/context/AppContext';
 import { useAppTheme } from '@/hooks/useAppTheme';
+import { exportSummaryPDF, exportTasksToCSV, exportTasksToICS } from '@/lib/export';
 
 type TTheme = 'light' | 'dark' | 'system';
 type TLang = 'pt' | 'en';
 type TStudy = 'matutino' | 'integral' | 'noturno';
 
 export default function ProfileAndSettingsScreen() {
-	const { profile, setProfile, syncNow, exportCalendarToICS } = useApp();
+	const { profile, setProfile, exportCalendarToICS, tasks, disciplines } = useApp();
+	const [exportingPdf, setExportingPdf] = useState(false);
+
 	const { colors } = useAppTheme();
 
 	// Perfil
@@ -41,8 +44,61 @@ export default function ProfileAndSettingsScreen() {
 
 	// Estados de operação
 	const [saving, setSaving] = useState(false);
-	const [syncing, setSyncing] = useState(false);
 	const [exporting, setExporting] = useState(false);
+
+	const handleExportPdf = async () => {
+		if (exportingPdf) return;
+		setExportingPdf(true);
+		try {
+			// monta um HTML bem simples com as tarefas e notas
+			const rows = tasks.map(t => {
+				const disc = disciplines.find(d => d.id === t.disciplineId)?.name ?? '—';
+				const dateStr = new Date(t.dueDate).toLocaleString();
+				const gradeStr = t.grade != null ? `${t.grade} / ${t.gradeMax ?? 10}` : '-';
+				return `
+					<tr>
+						<td>${t.type}</td>
+						<td>${t.title}</td>
+						<td>${disc}</td>
+						<td>${dateStr}</td>
+						<td>${gradeStr}</td>
+					</tr>
+				`;
+			}).join('');
+
+			const htmlBody = `
+				<h1>Resumo acadêmico</h1>
+				<p>Aluno(a): <strong>${profile?.name ?? ''}</strong></p>
+				<p>Curso: ${profile?.course ?? ''} • Instituição: ${profile?.institution ?? ''}</p>
+				<p>Semestre: ${profile?.semester ?? ''}</p>
+
+				<h2>Tarefas e notas</h2>
+				<table border="1" cellpadding="4" cellspacing="0" style="border-collapse:collapse;width:100%;font-size:12px;">
+					<thead>
+						<tr>
+							<th>Tipo</th>
+							<th>Título</th>
+							<th>Disciplina</th>
+							<th>Data</th>
+							<th>Nota</th>
+						</tr>
+					</thead>
+					<tbody>
+						${rows || '<tr><td colspan="5">Nenhuma tarefa cadastrada.</td></tr>'}
+					</tbody>
+				</table>
+			`;
+
+			await exportSummaryPDF(htmlBody);
+		} catch (err) {
+			console.error(err);
+			Alert.alert('Erro', 'Não foi possível gerar o PDF.');
+		} finally {
+			setExportingPdf(false);
+		}
+	};
+
+	
 
 	useEffect(() => {
 		if (notificationsOn) {
@@ -253,7 +309,14 @@ export default function ProfileAndSettingsScreen() {
 										{exporting ? 'Exportando...' : 'Exportar calendário (.ics)'}
 									</Text>
 								</Pressable>
+
+								<Pressable onPress={handleExportPdf} style={exportBtn}>
+									<Text style={{ color: colors.onPrimary, fontWeight: '700' }}>
+										{exportingPdf ? 'Gerando PDF...' : 'Exportar resumo em PDF'}
+									</Text>
+								</Pressable>
 							</View>
+							
 						</View>
 					</View>
 

@@ -2,7 +2,7 @@ import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import * as Print from 'expo-print';
 
-// CSV (Excel lê CSV numa boa)
+// CSV
 export async function exportTasksToCSV(tasks: any[], path = 'tarefas.csv') {
 	const header = ['Tipo', 'Título', 'Disciplina', 'Data', 'Nota', 'Max'];
 	const rows = tasks.map(t => [
